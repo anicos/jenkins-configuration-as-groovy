@@ -1,0 +1,225 @@
+== Jenkins configuration as Groovy code
+:imagesdir: images
+:source-highlighter: highlightjs
+:revealjs_history: true
+:revealjs_previewLinks: true
+
+
+image:master-jenkins.svg[width="300", height="200"] image:groovy-logo.png[width="300", height="200"]
+
+== Groovy and jenkins
+* Groovy Hook Script
+* Jenkins CLI
+* Script console
+* Groovy Plugin and Groovy Postbuild Plugin
+* Scriptler Plugin
+* Job DLS Plugin
+
+== Groovy Hook Script
+For given hook HOOK, the following locations are searched::
+* `WEB-INF/HOOK.groovy` in jenkins.war
+* `WEB-INF/HOOK.groovy.d/*.groovy` in the lexical order in jenkins.war
+* `$JENKINS_HOME/HOOK.groovy`
+* `$JENKINS_HOME/HOOK.groovy.d/*.groovy` in the lexical order
+
+[NOTE.speaker]
+--
+sudo docker run -p 8080:8080 -v /home/anicos/jenkins:/var/jenkins_home jenkins
+
+--
+
+=== Hook mechanism use the following events
+init:: end of init-phase → preconfigure Jenkins
+boot-failure:: allow automatic corrective actions to be taken (such as notifying somebody, raising alerts, restarting, and so on.)
+
+=== Hook script examples
+Start in the state that doesn't do any build::
+[source,groovy]
+----
+include::sourceCodeExamples/doQuietDownState.groovy[]
+----
+
+Set slave port and number of executoros at master node
+[source, groovy]
+----
+include::sourceCodeExamples/setSlavePortAndNumberOfExecutoros.groovy[]
+----
+
+=== Installing plugins on startup
+[source,groovy]
+----
+include::sourceCodeExamples/gitbucketAndChucknorrisInstalation.groovy[]
+----
+
+=== Create a global credential to work with git
+[source,groovy]
+----
+include::sourceCodeExamples/gitGlobalCredential.groovy[]
+----
+
+== Jenkins Command line interface
+
+* You can download from the URL on your Jenkins server `/jnlpJars/jenkins-cli.jar`
+* Example link https://jenkins.example.com/jnlpJars/jenkins-cli.jar
+
+=== Running a CLI command
+General syntax::
+`java -jar jenkins-cli.jar [-s JENKINS_URL] command [options...] [arguments...]`
+Getting help::
+`java -jar jenkins-cli.jar -s https://jenkins.example.com help [command]`
+
+[NOTE.speaker]
+--
+You can create own commands using jenkins plugins
+
+--
+
+=== Add Chuck Norris plugin to all build
+ java -jar jenkins-cli.jar -s http://localhost:8080
+ -i ~/jenkins_rsa groovy chuck.groovy
+
+[source,groovy]
+----
+include::sourceCodeExamples/chuckNorris.groovy[]
+----
+
+[NOTE.speaker]
+--
+java -jar jenkins-cli.jar -s http://localhost:8080 -i ~/jenkins1 groovy ~/Dev/asciidoctor/presentation-configuration-as-code-jenkins-dsl/sourceCodeExamples/chuckNorris.groovy
+--
+
+=== Bulk rename projects
+
+[source,groovy]
+----
+include::sourceCodeExamples/bulkRenameProjects.groovy[]
+----
+
+=== Running a CLI console
+java -jar jenkins-cli.jar -s http://jenkins/ groovysh
+
+== Script Console
+http://<jenkins>/script::
+https://wiki.jenkins-ci.org/display/JENKINS/Jenkins+Script+Console
+
+=== Remote access without Jenkins CLI
+* CRUMB=$(curl -s 'http://user:pass90@localhost:8080/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,":",//crumb)')
+* curl -H $CRUMB --user 'user:pass' --data-ur
+lencode "script=$(./gitbucketAndChucknorrisInstalation.groovy)" http://localhost:8080/scriptText
+
+== Groovy plugin
+Groovy Script::
+run in a forked JVM, on the slave where the build is run.
+System Groovy Script::
+run inside the Jenkins master's JVM
+
+== Groovy Postbuild Plugin
+This plugin executes a groovy script in the Jenkins JVM::
+* checking conditions and changes accordingly the build result
+* adding badges in build history
+* displays information on the build summary pag
+https://wiki.jenkins-ci.org/display/JENKINS/Groovy+Postbuild+Plugin
+
+== Scriptler Plugin
+This plugin allows you to ease your daily work with the Jenkins script console::
+* save/edit groovy scripts
+* select the node to execute the script on
+* download scripts from a shared catalog
+* scripts repo is exposed via git, push/pull scripts into scriptler
+* https://wiki.jenkins-ci.org/display/JENKINS/Scriptler+Plugin
+[NOTE.speaker]
+--
+Push and pull git example
+
+--
+
+== Job DSL Plugin
+[source,groovy]
+----
+include::sourceCodeExamples/npm-mvn-proxyBuild.groovy[]
+----
+
+=== DSL playground
+http://job-dsl.herokuapp.com/
+
+=== DSL documentation
+* https://github.com/jenkinsci/job-dsl-plugin/wiki/Job-DSL-Commands
+* http://sheehan.github.io/job-dsl-plugin/#
+
+=== Working with Job DSL Plugin
+* Developer updates DSL scritps locally
+* Developer pushes changes
+* SCM change triggers seed job
+* Seed job runs DSL
+* Seed job updates/creates/deletes
+
+=== Create a seed Job - DEMO
+[NOTE.speaker]
+--
+[source,groovy]
+----
+include::sourceCodeExamples/simpleSeedJobExample.groovy[]
+----
+--
+
+== Job DSL Gradle Example
+https://github.com/sheehan/job-dsl-gradle-example
+[NOTE.speaker]
+--
+Short description about file structure in project example.
+Creation job from github example
+--
+
+=== Basic folder/job creation
+[source,groovy]
+----
+include::sourceCodeExamples/basicFolderAndJobCreation.groovy[]
+----
+
+=== Job for each branch
+[source,groovy]
+----
+include::sourceCodeExamples/jobForEachBranch.groovy[]
+----
+
+=== Using configure block
+[source,groovy]
+----
+include::sourceCodeExamples/injectXml.groovy[]
+----
+
+=== Jobs that differ only with a few properties
+[source,groovy]
+----
+include::sourceCodeExamples/mapWithProperties.groovy[]
+----
+
+=== Static methods
+[source,groovy]
+----
+include::sourceCodeExamples/staticMethodExample.groovy[]
+----
+
+=== External script
+[source,groovy]
+----
+include::sourceCodeExamples/externalScript.groovy[]
+----
+
+=== Job builder
+* DslFactory
+
+== Testing
+
+== Jenkins DSL advantages
+[%step]
+* Version control
+* Testable
+* Reviewable
+* DRY
+
+== References
+* Using Groovy with Jenkins https://www.youtube.com/watch?v=7cbT5I9H4RY 
+* Jenkins Wiki https://wiki.jenkins-ci.org
+* Jenkins + Groovy with the Job DSL Plugin https://www.youtube.com/watch?v=SSK_JaBacE0&t=1517s
+* Examples on github https://github.com/sheehan/job-dsl-gradle-example

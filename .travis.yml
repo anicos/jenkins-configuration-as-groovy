@@ -1,0 +1,15 @@
+language: ruby
+rvm:
+  - 2.3.3
+script: 'bundle exec asciidoctor-revealjs index.adoc' 
+after_success: 
+before_deploy: 
+  - 'git clone -b 3.3.0 --depth 1 https://github.com/hakimel/reveal.js.git'
+  - 'zip -r presentation.zip ./* -x \*.git\* -x index.adoc -x -x Gemfile -x Gemfile.lock'
+deploy:
+  provider: releases
+  api_key: "$GIT_HUB"
+  file: "presentation.zip"
+  skip_cleanup: true
+  on:
+    tags: true
